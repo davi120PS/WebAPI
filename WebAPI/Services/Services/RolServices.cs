@@ -27,7 +27,8 @@ namespace WebAPI.Services.Services
         {
             try
             {
-                Rol response = await _context.Roles.FirstOrDefaultAsync(x => x.PKRol == id);
+                Rol response = await _context.Roles
+                    .FirstOrDefaultAsync(x => x.PKRol == id);
                 return response;
             }
             catch (Exception ex)

@@ -7,6 +7,8 @@ using WebAPI.Services.Services;
 
 namespace WebAPI.Controllers
 {
+    [ApiController]
+    [Route("[controller]")]
     public class RolController : Controller
     {
         private readonly IRolServices _rolServices;
@@ -16,7 +18,7 @@ namespace WebAPI.Controllers
             _rolServices = rolServices;
         }
 
-        // Obtener todos los usuarios
+        // Obtener todos los roles
         [HttpGet]
         public async Task<IActionResult> GetRols()
         {
@@ -24,26 +26,26 @@ namespace WebAPI.Controllers
             return Ok(rols);
         }
 
-        // Obtener un usuario por ID
+        // Obtener un rol por ID
         [HttpGet("{id:int}")]
-        public async Task<IActionResult> GetUser(int id)
+        public async Task<IActionResult> GetRol(int id)
         {
             var rol = await _rolServices.GetByIdRol(id);
             if (rol == null)
-                return NotFound($"No se encontró un usuario con ID {id}.");
+                return NotFound($"No se encontró un rol con ID {id}.");
 
             return Ok(rol);
         }
 
-        // Crear un nuevo usuario
+        // Crear un nuevo rol
         [HttpPost("crear")]
-        public async Task<IActionResult> PostUser([FromBody] Rol request)
+        public async Task<IActionResult> PostRol([FromBody] Rol request)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var createdUser = await _rolServices.CreateRol(request);
-            return CreatedAtAction(nameof(GetRols), new { id = createdUser.PKRol }, createdUser);
+            var createdRol = await _rolServices.CreateRol(request);
+            return CreatedAtAction(nameof(GetRol), new { id = createdRol.PKRol }, createdRol);
         }
 
         // Actualizar un usuario existente
@@ -53,11 +55,11 @@ namespace WebAPI.Controllers
             if (id != request.PKRol)
                 return BadRequest("El ID en la URL no coincide con el ID del cuerpo.");
 
-            var updatedUser = await _rolServices.EditRol(request);
-            if (updatedUser == null)
+            var updatedRol = await _rolServices.EditRol(request);
+            if (updatedRol == null)
                 return NotFound($"No se pudo actualizar el rol con ID {id}.");
 
-            return Ok(updatedUser);
+            return Ok(updatedRol);
         }
 
         // Eliminar un rol
