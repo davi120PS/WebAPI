@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using WebAPI.Services.IServices;
-using System.Threading.Tasks;
-using Domain.Entities;
 using Domain.DTO;
+using WebAPI.Services;
+using Microsoft.AspNetCore.Authorization;
 
 namespace WebAPI.Controllers
 {
@@ -18,6 +18,7 @@ namespace WebAPI.Controllers
         }
 
         // Obtener todos los usuarios
+       
         [HttpGet]
         public async Task<IActionResult> GetUsers()
         {
@@ -29,6 +30,8 @@ namespace WebAPI.Controllers
         }
 
         // Obtener un usuario por ID
+
+        [Authorize(Roles = "sa")]
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetUser(int id)
         {
@@ -44,6 +47,8 @@ namespace WebAPI.Controllers
         }
 
         // Crear un nuevo usuario
+
+        [Authorize]
         [HttpPost("crear")]
         public async Task<IActionResult> PostUser([FromBody] UserRequest request)
         {
@@ -59,6 +64,8 @@ namespace WebAPI.Controllers
         }
 
         // Actualizar un usuario existente
+
+        [Authorize]
         [HttpPut("editar/{id:int}")]
         public async Task<IActionResult> PutUser(int id, [FromBody] UserRequest request)
         {
@@ -90,6 +97,19 @@ namespace WebAPI.Controllers
 
             // Retorna mensaje de éxito con estado 200 OK
             return Ok(new { message = $"Usuario con ID {id} eliminado correctamente." });
+        }
+
+        // Endpoint para login y generación de token JWT
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginRequest login, [FromServices] JwtService jwtService)
+        {
+            var user = await _userServices.Authenticate(login.Username, login.Password);
+
+            if (user == null)
+                return Unauthorized("Credenciales inválidas");
+
+            var token = jwtService.GenerateToken(user.Username, user.Roles?.Name ?? "SinRol");
+            return Ok(new { token });
         }
     }
 }

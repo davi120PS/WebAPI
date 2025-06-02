@@ -140,5 +140,18 @@ namespace WebAPI.Services.Services
             }
 
         }
+
+        // Método para autenticar un usuario con su nombre de usuario y contraseña.
+        public async Task<User> Authenticate(string username, string password)
+        {
+            return await _context.Users.Include(u => u.Roles)
+                .FirstOrDefaultAsync(u => u.Username == username && u.Password == password);
+        }
+        public async Task<User> Login(string username, string password)
+        {
+            return await _context.Users.Include(u => u.Roles)
+                .FirstOrDefaultAsync(u => u.Username == username && u.Password == password);
+        }
+
     }
 }
