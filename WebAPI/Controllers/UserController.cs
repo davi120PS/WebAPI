@@ -65,7 +65,6 @@ namespace WebAPI.Controllers
 
         // Actualizar un usuario existente
 
-        [Authorize]
         [HttpPut("editar/{id:int}")]
         public async Task<IActionResult> PutUser(int id, [FromBody] UserRequest request)
         {
