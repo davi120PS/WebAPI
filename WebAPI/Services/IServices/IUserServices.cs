@@ -11,7 +11,5 @@ namespace WebAPI.Services.IServices
         Task<User> CreateUser(UserRequest i); // Crea un nuevo usuario en la base de datos.
         Task<User> EditUser(UserRequest i); // Edita los datos de un usuario existente.
         Task<bool> DeleteUser(int id); // Elimina un usuario por su identificador.
-        Task<User> Login(string username, string password); // Autentica un usuario con nombre de usuario y contraseña.
-        Task<User> Authenticate(string username, string password);
     }
 }

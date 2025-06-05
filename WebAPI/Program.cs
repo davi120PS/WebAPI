@@ -1,105 +1,97 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using System.Text;
 using WebAPI.Context;
 using WebAPI.Services.IServices;
 using WebAPI.Services.Services;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using WebAPI.Services;
-using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-builder.Services.AddControllers();
+//  Se obtiene la clave secreta para JWT desde appsettings.json o se usa una por defecto
+var key = builder.Configuration["Jwt:Key"] ?? "clave_super_secreta_1234567890_ABCDEF";
 
-// Configuración de Swagger para documentación de la API
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(options =>
+//  Configuración de autenticación JWT
+builder.Services.AddAuthentication(options =>
 {
-    options.SwaggerDoc("v1", new OpenApiInfo
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(opt =>
+{
+    opt.RequireHttpsMetadata = false; // Permitir HTTP sin certificado (solo en desarrollo)
+    opt.SaveToken = true;             // Guardar el token en la sesión HTTP
+    opt.TokenValidationParameters = new TokenValidationParameters
     {
-        Title = "Tu API",
-        Version = "v1",
-        Description = "Documentación de la API con JWT"
-    });
+        ValidateIssuer = false,       // No se valida el emisor (útil para entornos internos)
+        ValidateAudience = false,     // No se valida el público
+        ValidateLifetime = true,      // Se valida que el token no haya expirado
+        ValidateIssuerSigningKey = true, // Se valida la firma del token
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)) // Clave usada para firmar
+    };
+});
 
-    // Configuración de seguridad JWT para Swagger
-    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+//  Se habilita autorización (para usar [Authorize] en los controladores)
+builder.Services.AddAuthorization();
+
+//  Configuración de Swagger para probar la API con tokens JWT
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "WebApi29AV", Version = "v1" });
+
+    // Definición del esquema de seguridad (Bearer)
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
-        Type = SecuritySchemeType.ApiKey,
+        Type = SecuritySchemeType.Http,
         Scheme = "Bearer",
         BearerFormat = "JWT",
         In = ParameterLocation.Header,
-        Description = "Ingresa tu token JWT así: **Bearer tu_token**"
+        Description = "Introduce tu token JWT en este formato: **Bearer {token}**"
     });
 
-    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    // Requerimiento de seguridad para usar el esquema definido
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
             new OpenApiSecurityScheme
             {
-                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
             },
             Array.Empty<string>()
         }
     });
 });
 
-// Configuración de la conexión a la base de datos
-builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(
-    builder.Configuration.GetConnectionString("DefaultConnection")));
+//  Servicios y dependencias
+builder.Services.AddControllers();             // Controladores de la API
+builder.Services.AddEndpointsApiExplorer();    // Habilita los endpoints
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))); // Base de datos
 
+//  Servicios de usuarios y roles
 builder.Services.AddTransient<IUserServices, UserServices>();
 builder.Services.AddTransient<IRolServices, RolServices>();
-builder.Services.AddScoped<JwtService>();
-
-//JWT
-var jwtSettings = builder.Configuration.GetSection("Jwt");
-
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
-{
-    options.RequireHttpsMetadata = false; // true en producción
-    options.SaveToken = true;
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ValidIssuer = builder.Configuration["Jwt:Issuer"],
-        ValidAudience = builder.Configuration["Jwt:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
-    };
-});
-
-builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+//  Middleware del pipeline HTTP
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI(options =>
-    {
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "WebAPI v1");
-        options.EnablePersistAuthorization(); // Permite que la autorización persista entre recargas de página
-    });
+    app.UseSwaggerUI(); // Interfaz gráfica de Swagger
 }
 
 app.UseHttpsRedirection();
+
+app.UseAuthentication(); // ¡IMPORTANTE! Siempre antes de Authorization
 app.UseAuthorization();
-app.UseAuthentication();
-app.MapControllers();
 
-app.Run();
+app.MapControllers(); // Mapeo de endpoints de los controladores
 
-//DAVID PEÑA SANTOS 29AV
+app.Run(); // Ejecuta la aplicación

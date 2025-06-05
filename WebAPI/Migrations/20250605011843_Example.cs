@@ -51,8 +51,8 @@ namespace WebAPI.Migrations
                 columns: new[] { "PKRol", "Name" },
                 values: new object[,]
                 {
-                    { 1, "a" },
-                    { 2, "sa" }
+                    { 1, "User" },
+                    { 2, "Admin" }
                 });
 
             migrationBuilder.InsertData(

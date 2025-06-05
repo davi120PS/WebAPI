@@ -42,12 +42,12 @@ namespace WebAPI.Migrations
                         new
                         {
                             PKRol = 1,
-                            Name = "a"
+                            Name = "User"
                         },
                         new
                         {
                             PKRol = 2,
-                            Name = "sa"
+                            Name = "Admin"
                         });
                 });
 

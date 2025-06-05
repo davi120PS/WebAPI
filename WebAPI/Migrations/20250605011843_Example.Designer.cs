@@ -12,7 +12,7 @@ using WebAPI.Context;
 namespace WebAPI.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250523002655_Example")]
+    [Migration("20250605011843_Example")]
     partial class Example
     {
         /// <inheritdoc />
@@ -45,12 +45,12 @@ namespace WebAPI.Migrations
                         new
                         {
                             PKRol = 1,
-                            Name = "a"
+                            Name = "User"
                         },
                         new
                         {
                             PKRol = 2,
-                            Name = "sa"
+                            Name = "Admin"
                         });
                 });
 

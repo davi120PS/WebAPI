@@ -19,12 +19,12 @@ namespace WebAPI.Context
                 new Rol
                 {
                     PKRol = 1,
-                    Name = "a"
+                    Name = "User"
                 },
                 new Rol
                 {
                     PKRol = 2,
-                    Name = "sa"
+                    Name = "Admin"
                 });
 
             // Insertar en tabla Usuario
